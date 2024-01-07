@@ -1,3 +1,4 @@
+#pragma once
 #include <raylib-cpp.hpp>
 
 class Entity
@@ -10,6 +11,9 @@ public:
 
     Entity(raylib::Vector2 _position, raylib::Vector2 _size, float _speed, raylib::Color _color):
         position(_position), size(_size), speed(_speed), color(_color){};
+
+    virtual ~Entity(){}
+    virtual void update() = 0;
 
     Rectangle get_rect() const
     {

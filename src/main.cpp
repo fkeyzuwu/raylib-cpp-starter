@@ -1,11 +1,39 @@
 #include <raylib-cpp.hpp>
 #include "entity.h"
 #include "vector"
+#include "player.h"
+#include "enemy.h"
+#include "bullet.h"
 
-Entity* spawn_enemy()
+Enemy* spawn_enemy()
 {
-    return new Entity(
-        Vector2{float(GetRandomValue(0, GetScreenWidth())), float(GetRandomValue(0, GetScreenHeight()))},
+    int value = GetRandomValue(1, 4); // pick a random side to spawn from
+    float x_pos;
+    float y_pos;
+    int h = GetScreenHeight(); 
+    int w = GetScreenWidth();
+
+    switch(value){ // Generate random Position
+        case 1: // left
+            x_pos = -50;
+            y_pos = GetRandomValue(-(h/4), h + (h/4));
+            break;
+        case 2: // right
+            x_pos = w + 50;
+            y_pos = GetRandomValue(-(h/4), h + (h/4));
+            break;
+        case 3: // up
+            x_pos = GetRandomValue(-(w/4), w + (w/4));
+            y_pos = h + 50;
+            break;  
+        case 4: // down
+            x_pos = GetRandomValue(-(w/4), w + (w/4));
+            y_pos = -50;
+            break;
+    }
+
+    return new Enemy(
+        Vector2{x_pos, y_pos},
         Vector2{15, 15},
         50,
         GREEN
@@ -28,14 +56,15 @@ int main() {
     
     SetTargetFPS(60);
 
-    Entity player (
+    Player player (
         Vector2{float(screenWidth) / 2, float(screenHeight) / 2},
         Vector2{30, 30},
         150,
         RED
     );
 
-    std::vector<Entity*> enemies;
+    std::vector<Enemy*> enemies;
+    std::vector<Bullet*> bullets;
 
     float spawn_timer = 0;
     float spawn_interval = 2;
@@ -60,13 +89,15 @@ int main() {
         
         raylib::Vector2 direction = input.Normalize();
         player.position += direction * player.speed * delta;
+        player.position.x = Clamp(player.position.x, player.size.x / 2, screenWidth - player.size.x / 2);
+        player.position.y = Clamp(player.position.y, player.size.y / 2, screenHeight - player.size.y / 2);
         Rectangle player_rect = player.get_rect();
 
         BeginDrawing();
 
         for(int i = enemies.size() - 1; i >= 0; i--) 
         {
-            Entity* enemy = enemies.at(i);
+            Enemy* enemy = enemies.at(i);
             Rectangle enemy_rect = enemy->get_rect();
             if(CheckCollisionRecs(enemy_rect, player_rect))
             {
@@ -79,6 +110,8 @@ int main() {
                 raylib::Vector2 direction_to_player = (player.position - enemy->position).Normalize();
                 enemy->position += direction_to_player * enemy->speed * delta;
                 draw_entity(*enemy);
+
+                Bullet* bullet = enemy->shoot_bullet();
             }
         }
 
