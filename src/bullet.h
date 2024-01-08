@@ -4,9 +4,11 @@
 class Bullet : public Entity
 {
     using Entity::Entity;
+public:
+    raylib::Vector2 move_direction;
 
-    void update() override
+    void update(float delta) override
     {
-
+        position += move_direction * speed * delta;
     }
 };

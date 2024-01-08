@@ -5,6 +5,25 @@
 #include "enemy.h"
 #include "bullet.h"
 
+bool is_entity_out_of_screen(const Entity& entity)
+{
+    int h = GetScreenHeight(); 
+    int w = GetScreenWidth();
+
+    if(entity.position.x > w || entity.position.x < 0)
+    {
+        return true;
+    }
+    else if(entity.position.y > h || entity.position.y < 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 Enemy* spawn_enemy()
 {
     int value = GetRandomValue(1, 4); // pick a random side to spawn from
@@ -77,20 +96,12 @@ int main() {
         if(spawn_timer > spawn_interval)
         {
             spawn_timer = 0;
-            enemies.push_back(spawn_enemy());
+            Enemy* enemy = spawn_enemy();
+            enemy->target = &player;
+            enemies.push_back(enemy);
         }
 
-        raylib::Vector2 input = {0};
-
-        if (IsKeyDown(KEY_A)) input.x -= 1;
-        if (IsKeyDown(KEY_D)) input.x += 1;
-        if (IsKeyDown(KEY_W)) input.y -= 1;
-        if (IsKeyDown(KEY_S)) input.y += 1;
-        
-        raylib::Vector2 direction = input.Normalize();
-        player.position += direction * player.speed * delta;
-        player.position.x = Clamp(player.position.x, player.size.x / 2, screenWidth - player.size.x / 2);
-        player.position.y = Clamp(player.position.y, player.size.y / 2, screenHeight - player.size.y / 2);
+        player.update(delta);
         Rectangle player_rect = player.get_rect();
 
         BeginDrawing();
@@ -107,11 +118,33 @@ int main() {
             }
             else
             {
-                raylib::Vector2 direction_to_player = (player.position - enemy->position).Normalize();
-                enemy->position += direction_to_player * enemy->speed * delta;
+                enemy->update(delta);
+                if(enemy->can_shoot_bullet){
+                    Bullet* bullet = enemy->shoot_bullet();
+                    bullets.push_back(bullet);
+                }
                 draw_entity(*enemy);
+            }
+        }
 
-                Bullet* bullet = enemy->shoot_bullet();
+        for(int i = bullets.size() - 1; i >= 0; i--)
+        {
+            Bullet* bullet = bullets.at(i);
+            Rectangle bullet_rect = bullet->get_rect();
+            if(CheckCollisionRecs(bullet_rect, player_rect))
+            {
+                bullets.erase(bullets.begin() + i); //todo - make bullets destroy health
+                delete bullet;
+            }
+            else if(is_entity_out_of_screen(*bullet))
+            {
+                bullets.erase(bullets.begin() + i);
+                delete bullet;
+            }
+            else
+            {
+                bullet->update(delta);
+                draw_entity(*bullet);
             }
         }
 

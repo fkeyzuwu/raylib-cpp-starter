@@ -13,7 +13,7 @@ public:
         position(_position), size(_size), speed(_speed), color(_color){};
 
     virtual ~Entity(){}
-    virtual void update() = 0;
+    virtual void update(float delta) = 0;
 
     Rectangle get_rect() const
     {
