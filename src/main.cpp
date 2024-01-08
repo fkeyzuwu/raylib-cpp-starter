@@ -61,9 +61,23 @@ Enemy* spawn_enemy()
     );
 }
 
-void draw_entity(const Entity& entity)
+void draw_crosshair()
 {
-    DrawRectangleRec(entity.get_rect(), entity.color);
+    Vector2 mouse_position = GetMousePosition();
+    DrawCircleV(mouse_position, 5, BLACK);
+}
+
+void draw_entity(const Entity& entity, raylib::Vector2 entity_direction = {0, 0})
+{
+    if(entity_direction != raylib::Vector2{0, 0})
+    {
+        float rotation = std::atan2(entity_direction.y, entity_direction.x) * (180.0f / PI);
+        DrawRectanglePro(entity.get_rect(), Vector2{0, 0}, rotation, entity.color);
+    }
+    else
+    {
+        DrawRectangleRec(entity.get_rect(), entity.color);
+    }
 }
 
 int main() {
@@ -76,6 +90,7 @@ int main() {
     raylib::Window w(screenWidth, screenHeight, "Tamir gaming");
     
     SetTargetFPS(60);
+    DisableCursor();
 
     Player player (
         Vector2{float(screenWidth) / 2, float(screenHeight) / 2},
@@ -180,11 +195,12 @@ int main() {
             else
             {
                 bullet->update(delta);
-                draw_entity(*bullet);
+                draw_entity(*bullet, bullet->move_direction);
             }
         }
 
         draw_entity(player);
+        draw_crosshair();
         ClearBackground(RAYWHITE);
         
         textColor.DrawText("Player Health: " + std::to_string(player.health), 20, 20, 20);
