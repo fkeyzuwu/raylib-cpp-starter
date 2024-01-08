@@ -105,6 +105,12 @@ int main() {
 
         player.update(delta);
         Rectangle player_rect = player.get_rect();
+        
+        if(IsMouseButtonPressed(0))
+        {
+            Bullet* bullet = player.shoot_bullet();
+            bullets.push_back(bullet);
+        }
 
         BeginDrawing();
 
@@ -133,15 +139,38 @@ int main() {
         {
             Bullet* bullet = bullets.at(i);
             Rectangle bullet_rect = bullet->get_rect();
-            if(CheckCollisionRecs(bullet_rect, player_rect))
+            if(bullet->collision_mask == "Player" && CheckCollisionRecs(bullet_rect, player_rect))
             {
                 player.health -= 10;
                 if(player.health <= 0)
                 {
                     game_over = true;
                 }
-                bullets.erase(bullets.begin() + i); //todo - make bullets destroy health
+                bullets.erase(bullets.begin() + i);
                 delete bullet;
+                bullet = nullptr;
+            }
+            else if(bullet->collision_mask == "Enemy")
+            {
+                 for(int j = enemies.size() - 1; j >= 0; j--)
+                 {
+                    Enemy* enemy = enemies.at(j);
+                    Rectangle enemy_rect = enemy->get_rect();
+                    if (CheckCollisionRecs(bullet_rect, enemy_rect))
+                    {
+                        bullets.erase(bullets.begin() + i);
+                        delete bullet;
+                        bullet = nullptr;
+                        enemies.erase(enemies.begin() + j);
+                        delete enemy;
+                        break;
+                    }
+                 }
+            }
+
+            if(bullet == nullptr)
+            {
+                continue;
             }
             else if(is_entity_out_of_screen(*bullet))
             {

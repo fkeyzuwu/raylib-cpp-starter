@@ -29,12 +29,16 @@ public:
 
     Bullet* shoot_bullet()
     {
-        return new Bullet
+        Bullet* bullet = new Bullet
         (
             position,
             Vector2{8, 5},
             400,
-            PURPLE
+            BLUE
         );
+        raylib::Vector2 mouse_pos = GetMousePosition();
+        bullet->move_direction = (mouse_pos - position).Normalize();
+        bullet->collision_mask = "Enemy";
+        return bullet;
     }
 };

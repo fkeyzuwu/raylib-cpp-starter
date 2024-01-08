@@ -36,6 +36,7 @@ public:
             PURPLE
         );
         bullet->move_direction = (target->position - position).Normalize();
+        bullet->collision_mask = "Player";
         can_shoot_bullet = false;
         return bullet;
     }
