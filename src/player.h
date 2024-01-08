@@ -7,6 +7,7 @@ class Player : public Entity
 {
 public:
     using Entity::Entity;
+    int health = 100;
 
     void update(float delta) override
     {

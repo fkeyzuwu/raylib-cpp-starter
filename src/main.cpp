@@ -5,6 +5,8 @@
 #include "enemy.h"
 #include "bullet.h"
 
+bool game_over = false;
+
 bool is_entity_out_of_screen(const Entity& entity)
 {
     int h = GetScreenHeight(); 
@@ -71,7 +73,7 @@ int main() {
     int screenHeight = 450;
 
     raylib::Color textColor(LIGHTGRAY);
-    raylib::Window w(screenWidth, screenHeight, "Raylib C++ Starter Kit Example");
+    raylib::Window w(screenWidth, screenHeight, "Tamir gaming");
     
     SetTargetFPS(60);
 
@@ -133,6 +135,11 @@ int main() {
             Rectangle bullet_rect = bullet->get_rect();
             if(CheckCollisionRecs(bullet_rect, player_rect))
             {
+                player.health -= 10;
+                if(player.health <= 0)
+                {
+                    game_over = true;
+                }
                 bullets.erase(bullets.begin() + i); //todo - make bullets destroy health
                 delete bullet;
             }
@@ -151,7 +158,18 @@ int main() {
         draw_entity(player);
         ClearBackground(RAYWHITE);
         
-        textColor.DrawText("Congrats! You created your first window!", 190, 200, 20);
+        textColor.DrawText("Player Health: " + std::to_string(player.health), 20, 20, 20);
+
+        if(game_over)
+        {
+            const char* game_over_text = "Game Over!";
+            Vector2 text_size = MeasureTextEx(GetFontDefault(), game_over_text, 20, 1);
+            textColor.DrawText(
+                game_over_text, 
+                screenWidth / 2 - text_size.x / 2,
+                screenHeight / 2 - 100,
+                20);
+        }
 
         EndDrawing();
     }
