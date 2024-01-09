@@ -2,6 +2,7 @@
 
 #include "entity.h"
 #include "bullet.h"
+#include <memory>
 
 class Player : public Entity
 {
@@ -27,9 +28,9 @@ public:
         position.y = Clamp(position.y, size.y / 2, h - size.y / 2);
     }
 
-    Bullet* shoot_bullet()
+    std::shared_ptr<Bullet> shoot_bullet()
     {
-        Bullet* bullet = new Bullet
+        auto bullet = std::make_shared<Bullet>
         (
             position,
             Vector2{8, 5},

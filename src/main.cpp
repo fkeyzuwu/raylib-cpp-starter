@@ -4,6 +4,7 @@
 #include "player.h"
 #include "enemy.h"
 #include "bullet.h"
+#include <memory>
 
 bool game_over = false;
 
@@ -26,7 +27,7 @@ bool is_entity_out_of_screen(const Entity& entity)
     }
 }
 
-Enemy* spawn_enemy()
+std::shared_ptr<Enemy> spawn_enemy()
 {
     int value = GetRandomValue(1, 4); // pick a random side to spawn from
     float x_pos;
@@ -53,7 +54,7 @@ Enemy* spawn_enemy()
             break;
     }
 
-    return new Enemy(
+    return std::make_shared<Enemy>(
         Vector2{x_pos, y_pos},
         Vector2{15, 15},
         50,
@@ -99,8 +100,8 @@ int main() {
         RED
     );
 
-    std::vector<Enemy*> enemies;
-    std::vector<Bullet*> bullets;
+    std::vector<std::shared_ptr<Enemy>> enemies;
+    std::vector<std::shared_ptr<Bullet>> bullets;
 
     float spawn_timer = 0;
     float spawn_interval = 2;
@@ -113,7 +114,7 @@ int main() {
         if(spawn_timer > spawn_interval)
         {
             spawn_timer = 0;
-            Enemy* enemy = spawn_enemy();
+            auto enemy = spawn_enemy();
             enemy->target = &player;
             enemies.push_back(enemy);
         }
@@ -123,7 +124,7 @@ int main() {
         
         if(IsMouseButtonPressed(0))
         {
-            Bullet* bullet = player.shoot_bullet();
+            auto bullet = player.shoot_bullet();
             bullets.push_back(bullet);
         }
 
@@ -131,28 +132,29 @@ int main() {
 
         for(int i = enemies.size() - 1; i >= 0; i--) 
         {
-            Enemy* enemy = enemies.at(i);
+            auto enemy = enemies.at(i);
             Rectangle enemy_rect = enemy->get_rect();
             if(CheckCollisionRecs(enemy_rect, player_rect))
             {
                 enemies.erase(enemies.begin() + i);
                 player.speed += 10;
-                delete enemy;
             }
             else
             {
                 enemy->update(delta);
                 if(enemy->can_shoot_bullet){
-                    Bullet* bullet = enemy->shoot_bullet();
+                    auto bullet = enemy->shoot_bullet();
                     bullets.push_back(bullet);
                 }
                 draw_entity(*enemy);
             }
         }
 
+        draw_entity(player);
+
         for(int i = bullets.size() - 1; i >= 0; i--)
         {
-            Bullet* bullet = bullets.at(i);
+            auto bullet = bullets.at(i);
             Rectangle bullet_rect = bullet->get_rect();
             if(bullet->collision_mask == "Player" && CheckCollisionRecs(bullet_rect, player_rect))
             {
@@ -162,22 +164,17 @@ int main() {
                     game_over = true;
                 }
                 bullets.erase(bullets.begin() + i);
-                delete bullet;
-                bullet = nullptr;
             }
             else if(bullet->collision_mask == "Enemy")
             {
                  for(int j = enemies.size() - 1; j >= 0; j--)
                  {
-                    Enemy* enemy = enemies.at(j);
+                    auto enemy = enemies.at(j);
                     Rectangle enemy_rect = enemy->get_rect();
                     if (CheckCollisionRecs(bullet_rect, enemy_rect))
                     {
                         bullets.erase(bullets.begin() + i);
-                        delete bullet;
-                        bullet = nullptr;
                         enemies.erase(enemies.begin() + j);
-                        delete enemy;
                         break;
                     }
                  }
@@ -190,7 +187,6 @@ int main() {
             else if(is_entity_out_of_screen(*bullet))
             {
                 bullets.erase(bullets.begin() + i);
-                delete bullet;
             }
             else
             {
@@ -199,7 +195,6 @@ int main() {
             }
         }
 
-        draw_entity(player);
         draw_crosshair();
         ClearBackground(RAYWHITE);
         

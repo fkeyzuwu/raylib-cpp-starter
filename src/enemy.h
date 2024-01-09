@@ -2,6 +2,7 @@
 
 #include "entity.h"
 #include "bullet.h"
+#include <memory>
 
 class Enemy : public Entity
 {
@@ -26,15 +27,16 @@ public:
         position += direction_to_target * speed * delta;
     }
 
-    Bullet* shoot_bullet()
+    std::shared_ptr<Bullet> shoot_bullet()
     {
-        Bullet* bullet = new Bullet
+        auto bullet = std::make_shared<Bullet>
         (
             position,
             Vector2{8, 5},
             400,
             PURPLE
         );
+
         bullet->move_direction = (target->position - position).Normalize();
         bullet->collision_mask = "Player";
         can_shoot_bullet = false;
