@@ -1,14 +1,31 @@
 #pragma once
 
 #include "entity.h"
-#include "bullet.h"
+#include "sprite.h"
+#include "physics.h"
+#include "transform.h"
 #include <memory>
+
+using fkeyz::Sprite;
+using fkeyz::Physics;
 
 class Player : public Entity
 {
 public:
-    using Entity::Entity;
+    // using Entity::Entity;
     int health = 100;
+
+    Player()
+    {
+        Vector2 rect_size = raylib::Vector2(50, 50);
+        auto transform = std::make_shared<fkeyz::Transform>(raylib::Vector2(100, 100), raylib::Vector2(1, 1), 0.0f);
+        auto sprite = std::make_shared<Sprite>(rect_size, raylib::Color::Red(), 0);
+        auto physics = std::make_shared<Physics>(rect_size, 1, 150);
+
+        AddComponent(transform);
+        AddComponent(sprite);
+        AddComponent(physics);
+    };
 
     void update(float delta) override
     {
@@ -23,23 +40,12 @@ public:
         if (IsKeyDown( KEY_S)) input.y += 1;
         
         raylib::Vector2 direction = input.Normalize();
-        position += direction * speed * delta;
-        position.x = Clamp(position.x, size.x / 2, w - size.x / 2);
-        position.y = Clamp(position.y, size.y / 2, h - size.y / 2);
-    }
-
-    std::shared_ptr<Bullet> shoot_bullet()
-    {
-        auto bullet = std::make_shared<Bullet>
-        (
-            position,
-            Vector2{8, 5},
-            400,
-            BLUE
-        );
-        raylib::Vector2 mouse_pos = GetMousePosition();
-        bullet->move_direction = (mouse_pos - position).Normalize();
-        bullet->collision_mask = "Enemy";
-        return bullet;
+        auto transform = GetComponent<fkeyz::Transform>();
+        auto physics = GetComponent<Physics>();
+        raylib::Vector2 pos = transform->position;
+        pos += direction * physics->speed * delta;
+        pos.x = Clamp(pos.x, physics->collision_size.x / 2, w - physics->collision_size.x / 2);
+        pos.y = Clamp(pos.y, physics->collision_size.y / 2, h - physics->collision_size.y / 2);
+        transform->position = pos;
     }
 };

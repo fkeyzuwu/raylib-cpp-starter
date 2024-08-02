@@ -1,28 +1,39 @@
 #pragma once
 #include <raylib-cpp.hpp>
+#include "transform.h"
+#include <typeinfo>
 
-class Entity
+namespace fkeyz
 {
-public:
-    raylib::Vector2 position;
-    raylib::Vector2 size;
-    float speed;
-    raylib::Color color;
+    class Component;
 
-    Entity(raylib::Vector2 _position, raylib::Vector2 _size, float _speed, raylib::Color _color):
-        position(_position), size(_size), speed(_speed), color(_color){};
-
-    virtual ~Entity(){}
-    virtual void update(float delta) = 0;
-
-    Rectangle get_rect() const
+    class Entity
     {
-        return Rectangle
+    public:
+        std::vector<std::shared_ptr<Component>> components;
+
+        virtual ~Entity(){}
+        virtual void update(float delta) = 0;
+
+        void AddComponent(std::shared_ptr<Component> component)
         {
-            position.x - size.x / 2,
-            position.y - size.y / 2, // might need to change it to + instead of -
-            size.x,
-            size.y
-        };
-    }
-};
+            components.push_back(component);
+            component->parent = this;
+        }
+
+        template<typename T>
+        std::shared_ptr<T> GetComponent() const
+        {
+            for (auto& component : components) {
+                std::shared_ptr<T> castedComponent = std::dynamic_pointer_cast<T>(component);
+                if (castedComponent) {
+                    return castedComponent;
+                }
+            }
+
+            return nullptr;
+        }
+    };
+
+    
+}
